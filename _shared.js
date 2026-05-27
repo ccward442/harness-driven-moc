@@ -5,6 +5,52 @@
 (function () {
   'use strict';
 
+  // ===== Auth (mock) =====
+  // localStorage に擬似セッションを保存。本番では Supabase Auth に置き換わる箇所。
+  const AUTH_KEY = 'work_log_mock_session';
+  // ログイン不要で見られるページ (ファイル名から .html を除いた値)
+  const PUBLIC_PAGES = new Set(['s-01-login', 'index']);
+
+  function currentScreen() {
+    return (location.pathname.split('/').pop() || 'index.html').replace(/\.html$/, '');
+  }
+  function getSession() {
+    try { return JSON.parse(localStorage.getItem(AUTH_KEY) || 'null'); } catch (_) { return null; }
+  }
+  function setSession(user) {
+    localStorage.setItem(AUTH_KEY, JSON.stringify({
+      user: user || { name: 'Taro Nakamura', initials: 'TN', email: 'taro@example.co.jp' },
+      loggedInAt: new Date().toISOString(),
+    }));
+  }
+  function clearSession() { localStorage.removeItem(AUTH_KEY); }
+
+  window.Auth = {
+    isLoggedIn: () => !!getSession(),
+    getUser: () => (getSession() || {}).user || null,
+    login(user) {
+      setSession(user);
+      window.toast && toast.success('サインインしました');
+      setTimeout(() => location.href = 's-02-dashboard.html', 600);
+    },
+    logout() {
+      clearSession();
+      window.toast && toast.info('ログアウトしました');
+      setTimeout(() => location.href = 's-01-login.html', 500);
+    },
+  };
+
+  // 認証ガード (即時、DOMContentLoadedを待たない)
+  (function guard() {
+    const screen = currentScreen();
+    const logged = !!getSession();
+    if (screen === 's-01-login' && logged) {
+      location.replace('s-02-dashboard.html'); // ログイン済みでログイン画面 → ダッシュへ
+    } else if (!PUBLIC_PAGES.has(screen) && !logged) {
+      location.replace('s-01-login.html');     // 未ログインで保護画面 → ログインへ
+    }
+  })();
+
   // ===== Toast =====
   function showToast(message, kind) {
     const root = document.getElementById('toastContainer');
@@ -201,6 +247,61 @@
         e.preventDefault();
         toast.info('当日のタスクを集計しています...');
         setTimeout(() => location.href = btn.dataset.redirect || 's-06-chat.html', 700);
+      });
+    });
+
+    // (11) ログイン
+    document.querySelectorAll('[data-action="login"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        Auth.login();
+      });
+    });
+
+    // (12) ログアウト (確認モーダル付き)
+    document.querySelectorAll('[data-action="logout"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        Modal.confirm('ログアウトしますか?', () => Auth.logout(), {
+          title: 'ログアウト確認', icon: 'ti-logout',
+          confirmLabel: 'ログアウト', confirmClass: 'danger',
+        });
+      });
+    });
+
+    // (13) アバタークリック → ユーザメニュー (ログアウト含む)
+    document.querySelectorAll('.avatar[data-action="info"]').forEach(av => {
+      // 既存の info ハンドラを上書きするため、cloneして再バインド
+      const fresh = av.cloneNode(true);
+      av.parentNode.replaceChild(fresh, av);
+      fresh.addEventListener('click', (e) => {
+        e.preventDefault();
+        const user = Auth.getUser() || { name: 'ゲスト', email: '' };
+        Modal.open(`
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+            <div class="avatar lg">${user.initials || 'U'}</div>
+            <div>
+              <div style="font-weight:700;">${user.name}</div>
+              <div style="font-size:12px; color:var(--text-muted);">${user.email || ''}</div>
+            </div>
+          </div>
+          <hr style="border:none; border-top:1px solid var(--border); margin:12px 0;" />
+          <a href="s-10-settings.html" style="display:block; padding:8px 0; color:var(--text);"><i class="ti ti-settings"></i> 設定</a>
+          <a href="#" id="userMenuLogout" style="display:block; padding:8px 0; color:var(--error);"><i class="ti ti-logout"></i> ログアウト</a>
+        `, {
+          title: 'アカウント', icon: 'ti-user-circle',
+          confirmLabel: '閉じる', cancelLabel: null,
+        });
+        // 「キャンセル」ボタンを隠して「閉じる」だけに
+        const root = document.getElementById('modalRoot');
+        const cancelBtn = root && root.querySelector('footer .btn.ghost');
+        if (cancelBtn) cancelBtn.style.display = 'none';
+        const lo = document.getElementById('userMenuLogout');
+        if (lo) lo.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          Modal.close();
+          setTimeout(() => Auth.logout(), 80);
+        });
       });
     });
   });
