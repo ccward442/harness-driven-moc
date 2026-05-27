@@ -5,51 +5,25 @@
 (function () {
   'use strict';
 
-  // ===== Auth (mock) =====
-  // localStorage に擬似セッションを保存。本番では Supabase Auth に置き換わる箇所。
-  const AUTH_KEY = 'work_log_mock_session';
-  // ログイン不要で見られるページ (ファイル名から .html を除いた値)
-  const PUBLIC_PAGES = new Set(['s-01-login', 'index']);
-
-  function currentScreen() {
-    return (location.pathname.split('/').pop() || 'index.html').replace(/\.html$/, '');
+  // ===== Auth (mock, light-weight) =====
+  // ログイン/ログアウトの「動作」だけ用意。セッション追跡や保護画面の自動リダイレクトは行わない
+  // (クライアントが全画面を自由にクリックできることを優先)。
+  // 現在ユーザ情報は MOCK_SEED.currentUser から取得。
+  function currentUser() {
+    const seed = window.MOCK_SEED || {};
+    return seed.currentUser || { name: 'ゲスト', initials: '?', email: '' };
   }
-  function getSession() {
-    try { return JSON.parse(localStorage.getItem(AUTH_KEY) || 'null'); } catch (_) { return null; }
-  }
-  function setSession(user) {
-    localStorage.setItem(AUTH_KEY, JSON.stringify({
-      user: user || { name: 'Taro Nakamura', initials: 'TN', email: 'taro@example.co.jp' },
-      loggedInAt: new Date().toISOString(),
-    }));
-  }
-  function clearSession() { localStorage.removeItem(AUTH_KEY); }
-
   window.Auth = {
-    isLoggedIn: () => !!getSession(),
-    getUser: () => (getSession() || {}).user || null,
-    login(user) {
-      setSession(user);
+    getUser: currentUser,
+    login() {
       window.toast && toast.success('サインインしました');
       setTimeout(() => location.href = 's-02-dashboard.html', 600);
     },
     logout() {
-      clearSession();
       window.toast && toast.info('ログアウトしました');
       setTimeout(() => location.href = 's-01-login.html', 500);
     },
   };
-
-  // 認証ガード (即時、DOMContentLoadedを待たない)
-  (function guard() {
-    const screen = currentScreen();
-    const logged = !!getSession();
-    if (screen === 's-01-login' && logged) {
-      location.replace('s-02-dashboard.html'); // ログイン済みでログイン画面 → ダッシュへ
-    } else if (!PUBLIC_PAGES.has(screen) && !logged) {
-      location.replace('s-01-login.html');     // 未ログインで保護画面 → ログインへ
-    }
-  })();
 
   // ===== Toast =====
   function showToast(message, kind) {
@@ -269,39 +243,56 @@
       });
     });
 
-    // (13) アバタークリック → ユーザメニュー (ログアウト含む)
-    document.querySelectorAll('.avatar[data-action="info"]').forEach(av => {
-      // 既存の info ハンドラを上書きするため、cloneして再バインド
-      const fresh = av.cloneNode(true);
-      av.parentNode.replaceChild(fresh, av);
-      fresh.addEventListener('click', (e) => {
+    // (13) トップバーアバター → ユーザドロップダウン (ログアウト導線)
+    // <div class="avatar" data-user-menu>TN</div>
+    document.querySelectorAll('[data-user-menu]').forEach(av => {
+      av.style.cursor = 'pointer';
+      av.setAttribute('title', 'アカウントメニュー');
+      av.addEventListener('click', (e) => {
         e.preventDefault();
-        const user = Auth.getUser() || { name: 'ゲスト', email: '' };
-        Modal.open(`
-          <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+        e.stopPropagation();
+        // 既に開いていればトグル
+        const existing = document.getElementById('userDropdown');
+        if (existing) { existing.remove(); return; }
+        const user = Auth.getUser();
+        const dd = document.createElement('div');
+        dd.id = 'userDropdown';
+        dd.className = 'user-dropdown';
+        const rect = av.getBoundingClientRect();
+        dd.style.top = (rect.bottom + window.scrollY + 8) + 'px';
+        dd.style.right = Math.max(8, (window.innerWidth - rect.right)) + 'px';
+        dd.innerHTML = `
+          <div class="user-head">
             <div class="avatar lg">${user.initials || 'U'}</div>
-            <div>
-              <div style="font-weight:700;">${user.name}</div>
-              <div style="font-size:12px; color:var(--text-muted);">${user.email || ''}</div>
+            <div class="user-meta">
+              <div class="user-name">${user.name || 'ゲスト'}</div>
+              <div class="user-mail">${user.email || ''}</div>
+              ${user.role ? `<div class="user-role">${user.role}</div>` : ''}
             </div>
           </div>
-          <hr style="border:none; border-top:1px solid var(--border); margin:12px 0;" />
-          <a href="s-10-settings.html" style="display:block; padding:8px 0; color:var(--text);"><i class="ti ti-settings"></i> 設定</a>
-          <a href="#" id="userMenuLogout" style="display:block; padding:8px 0; color:var(--error);"><i class="ti ti-logout"></i> ログアウト</a>
-        `, {
-          title: 'アカウント', icon: 'ti-user-circle',
-          confirmLabel: '閉じる', cancelLabel: null,
-        });
-        // 「キャンセル」ボタンを隠して「閉じる」だけに
-        const root = document.getElementById('modalRoot');
-        const cancelBtn = root && root.querySelector('footer .btn.ghost');
-        if (cancelBtn) cancelBtn.style.display = 'none';
-        const lo = document.getElementById('userMenuLogout');
-        if (lo) lo.addEventListener('click', (ev) => {
+          <div class="user-divider"></div>
+          <a href="s-10-settings.html" class="user-item"><i class="ti ti-settings"></i><span>設定</span></a>
+          <a href="#" class="user-item danger" data-action="logout-direct"><i class="ti ti-logout"></i><span>ログアウト</span></a>
+        `;
+        document.body.appendChild(dd);
+        // ドロップダウン内ログアウトリンク
+        dd.querySelector('[data-action="logout-direct"]').addEventListener('click', (ev) => {
           ev.preventDefault();
-          Modal.close();
-          setTimeout(() => Auth.logout(), 80);
+          dd.remove();
+          Modal.confirm('ログアウトしますか?', () => Auth.logout(), {
+            title: 'ログアウト確認', icon: 'ti-logout',
+            confirmLabel: 'ログアウト', confirmClass: 'danger',
+          });
         });
+        // 外側クリックで閉じる
+        setTimeout(() => {
+          document.addEventListener('click', function close(ev) {
+            if (!dd.contains(ev.target)) {
+              dd.remove();
+              document.removeEventListener('click', close);
+            }
+          });
+        }, 0);
       });
     });
   });

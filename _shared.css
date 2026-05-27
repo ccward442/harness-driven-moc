@@ -435,3 +435,38 @@ a { color: inherit; }
 
 /* ===== 共通: コンテナ内テーブル横スクロール ===== */
 .table-scroll { width: 100%; overflow-x: auto; }
+
+/* ===== User Dropdown (トップバーのアバタークリックで開く) ===== */
+.user-dropdown {
+  position: absolute;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 12px;
+  min-width: 240px;
+  z-index: 90;
+  animation: dropdown-in 0.15s ease;
+}
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.user-dropdown .user-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 6px 6px 10px;
+}
+.user-dropdown .user-meta { min-width: 0; }
+.user-dropdown .user-name { font-weight: 700; font-size: 14px; color: var(--text); }
+.user-dropdown .user-mail { font-size: 12px; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px; }
+.user-dropdown .user-role { display: inline-block; margin-top: 4px; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--primary-light); color: var(--primary); font-weight: 600; }
+.user-dropdown .user-divider { height: 1px; background: var(--border); margin: 6px -6px; }
+.user-dropdown .user-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 8px; border-radius: var(--radius);
+  font-size: 14px; color: var(--text); text-decoration: none;
+}
+.user-dropdown .user-item:hover { background: var(--bg); }
+.user-dropdown .user-item.danger { color: var(--error); }
+.user-dropdown .user-item.danger:hover { background: var(--error-light); }
+.user-dropdown .user-item i { font-size: 18px; }
