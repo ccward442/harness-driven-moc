@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>S-04 タスクボード — work-log</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.30.0/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="_shared.css">
+  <style>
+    .board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; min-height: calc(100vh - 240px); }
+    .column {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      min-height: 100%;
+    }
+    .col-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 18px; border-bottom: 1px solid var(--border);
+    }
+    .col-head .label { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
+    .col-head .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .col-head .dot.todo { background: var(--text-muted); }
+    .col-head .dot.doing { background: var(--warning); }
+    .col-head .dot.done { background: var(--success); }
+    .col-head .count { background: var(--bg); color: var(--text-muted); font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; }
+    .col-add {
+      padding: 10px 18px;
+      color: var(--text-muted); font-size: 13px; font-weight: 600;
+      border-top: 1px dashed var(--border);
+      cursor: pointer;
+    }
+    .col-add:hover { color: var(--primary); background: var(--primary-light); }
+    .col-body { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+    .task-card {
+      background: var(--bg);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      border: 1px solid transparent;
+      cursor: grab;
+    }
+    .task-card:hover { background: #fff; border-color: var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .task-card .pj-tag { display: inline-block; margin-bottom: 8px; }
+    .task-card .title { font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+    .task-card .meta-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--text-muted); }
+    .task-card .meta-row .icons { display: flex; align-items: center; gap: 10px; }
+    .task-card .meta-row .icons i { margin-right: 3px; }
+    .due-chip { font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 600; background: var(--bg); color: var(--text-muted); }
+    .due-chip.over { background: var(--error-light); color: var(--error); }
+    .due-chip.soon { background: var(--warning-light); color: var(--warning); }
+    .pj-switcher {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 6px 14px; border-radius: var(--radius); font-weight: 600;
+    }
+    @media (max-width: 1100px) { .board { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <a class="logo" href="#"><div class="logo-mark"><i class="ti ti-notebook"></i></div><span>work-log</span></a>
+      <div class="nav-section">Home</div>
+      <a class="nav-item" href="s-02-dashboard.html"><i class="ti ti-layout-dashboard i"></i> ダッシュボード</a>
+      <div class="nav-section">プロジェクト</div>
+      <a class="nav-item" href="s-03-projects.html"><i class="ti ti-folder i"></i> プロジェクト一覧</a>
+      <a class="nav-item active" href="s-04-task-board.html"><i class="ti ti-list-check i"></i> タスクボード <span class="badge">12</span></a>
+      <div class="nav-section">日報</div>
+      <a class="nav-item" href="s-06-chat.html"><i class="ti ti-sparkles i"></i> AI壁打ち</a>
+      <a class="nav-item" href="s-07-diary-list.html"><i class="ti ti-book-2 i"></i> 日報一覧</a>
+      <a class="nav-item" href="s-09-summary.html"><i class="ti ti-chart-bar i"></i> 週次・月次サマリ</a>
+      <div class="nav-section">その他</div>
+      <a class="nav-item" href="s-10-settings.html"><i class="ti ti-settings i"></i> 設定</a>
+    </aside>
+
+    <div class="main">
+      <header class="header">
+        <button class="hamburger" onclick="toggleSidebar()" aria-label="メニュー"><i class="ti ti-menu-2"></i></button>
+        <div class="search"><i class="ti ti-search"></i><input type="text" placeholder="タスクを検索..." /></div>
+        <div class="actions">
+          <button class="icon-btn" data-action="info" data-message="テーマを切り替えます (プロトタイプでは未連動)"><i class="ti ti-sun"></i></button>
+          <button class="icon-btn" data-action="info" data-message="通知 3 件 (プロトタイプ表示)"><i class="ti ti-bell"></i></button>
+          <div class="avatar" data-action="info" data-message="ユーザメニュー (プロトタイプ未実装)" style="cursor:pointer;" title="ユーザメニュー">TN</div>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="page-title">
+          <div>
+            <h1>work-log MVP 開発</h1>
+            <div class="breadcrumb">Home / プロジェクト / work-log MVP 開発 &nbsp;·&nbsp; 18タスク / 13完了</div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <div class="pj-switcher"><i class="ti ti-folder"></i> work-log MVP <i class="ti ti-chevron-down"></i></div>
+            <button class="btn ghost" data-action="info" data-message="この機能はプロトタイプでは未実装です"><i class="ti ti-filter"></i> フィルタ</button>
+            <button class="btn primary" data-action="info" data-message="この操作を実行します (プロトタイプ)"><i class="ti ti-plus"></i> タスク追加</button>
+          </div>
+        </div>
+
+        <div class="board">
+          <!-- Todo -->
+          <div class="column">
+            <div class="col-head">
+              <div class="label"><span class="dot todo"></span> Todo</div>
+              <span class="count">3</span>
+            </div>
+            <div class="col-body">
+              <div class="task-card">
+                <span class="chip primary pj-tag">work-log MVP</span>
+                <div class="title">画面遷移図のレビュー依頼を出す</div>
+                <div class="meta-row">
+                  <span class="due-chip">明日</span>
+                  <div class="icons"><i class="ti ti-message-circle"></i>2 <i class="ti ti-history"></i>1</div>
+                </div>
+              </div>
+              <div class="task-card">
+                <span class="chip primary pj-tag">work-log MVP</span>
+                <div class="title">DiaryEntry のスキーマ確定(UNIQUE 制約含む)</div>
+                <div class="meta-row">
+                  <span class="due-chip">6/2</span>
+                  <div class="icons"><i class="ti ti-message-circle"></i>0</div>
+                </div>
+              </div>
+              <div class="task-card">
+                <span class="chip primary pj-tag">work-log MVP</span>
+                <div class="title">Vercel 環境変数の整理(Gemini API キー)</div>
+                <div class="meta-row">
+                  <span class="due-chip">6/5</span>
+                  <div class="icons"><i class="ti ti-message-circle"></i>1</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-add"><i class="ti ti-plus"></i> &nbsp;タスクを追加</div>
+          </div>
+
+          <!-- Doing -->
+          <div class="column">
+            <div class="col-head">
+              <div class="label"><span class="dot doing"></span> Doing</div>
+              <span class="count">2</span>
+            </div>
+            <div class="col-body">
+              <div class="task-card" style="border-color: var(--warning); background: #fff;">
+                <span class="chip warning pj-tag">UI 検証</span>
+                <div class="title">Modernize テンプレのレイアウト調査</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">サイドバー幅・色・コンポーネント形状を引き出して shared.css に反映</div>
+                <div class="meta-row">
+                  <span class="due-chip soon">今日 18:00</span>
+                  <div class="icons"><i class="ti ti-message-circle"></i>3 <i class="ti ti-history"></i>2</div>
+                </div>
+              </div>
+              <div class="task-card" style="border-color: var(--error); background: #fff;">
+                <span class="chip error pj-tag">AI 基盤</span>
+                <div class="title">Gemini API のレート制限を一覧化</div>
+                <div class="meta-row">
+                  <span class="due-chip over">今日 17:00 (超過)</span>
+                  <div class="icons"><i class="ti ti-message-circle"></i>1</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-add"><i class="ti ti-plus"></i> &nbsp;タスクを追加</div>
+          </div>
+
+          <!-- Done -->
+          <div class="column">
+            <div class="col-head">
+              <div class="label"><span class="dot done"></span> Done</div>
+              <span class="count">5</span>
+            </div>
+            <div class="col-body">
+              <div class="task-card">
+                <span class="chip primary pj-tag">work-log MVP</span>
+                <div class="title">ER 図を Mermaid 化して要件書に貼る</div>
+                <div class="meta-row">
+                  <span class="due-chip" style="background:var(--success-light); color:var(--success-dark);">16:42 完了</span>
+                  <div class="icons"><i class="ti ti-message-circle"></i>4</div>
+                </div>
+              </div>
+              <div class="task-card">
+                <span class="chip primary pj-tag">work-log MVP</span>
+                <div class="title">Supabase RLS ポリシー方針を整理</div>
+                <div class="meta-row">
+                  <span class="due-chip" style="background:var(--success-light); color:var(--success-dark);">15:10 完了</span>
+                  <div class="icons"><i class="ti ti-message-circle"></i>2</div>
+                </div>
+              </div>
+              <div class="task-card">
+                <span class="chip primary pj-tag">work-log MVP</span>
+                <div class="title">8エンティティの確定とドキュメント化</div>
+                <div class="meta-row">
+                  <span class="due-chip" style="background:var(--success-light); color:var(--success-dark);">昨日 完了</span>
+                  <div class="icons"><i class="ti ti-message-circle"></i>5</div>
+                </div>
+              </div>
+              <div class="task-card">
+                <span class="chip primary pj-tag">work-log MVP</span>
+                <div class="title">画面一覧 S-01〜S-10 の洗い出し</div>
+                <div class="meta-row">
+                  <span class="due-chip" style="background:var(--success-light); color:var(--success-dark);">2日前 完了</span>
+                  <div class="icons"><i class="ti ti-message-circle"></i>1</div>
+                </div>
+              </div>
+              <div class="task-card">
+                <span class="chip primary pj-tag">work-log MVP</span>
+                <div class="title">ヒアリングシート完成</div>
+                <div class="meta-row">
+                  <span class="due-chip" style="background:var(--success-light); color:var(--success-dark);">2日前 完了</span>
+                  <div class="icons"><i class="ti ti-message-circle"></i>0</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-add"><i class="ti ti-plus"></i> &nbsp;タスクを追加</div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  <div id="drawerOverlay" class="drawer-overlay" onclick="toggleSidebar()"></div>
+  <div id="toastContainer" class="toast-container"></div>
+  <script src="_data/seed.js"></script>
+  <script src="_data/projects.js"></script>
+  <script src="_data/tasks.js"></script>
+  <script src="_data/diary-entries.js"></script>
+  <script src="_data/chat-messages.js"></script>
+  <script src="_data/comments.js"></script>
+  <script src="_shared.js"></script>
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>S-09 週次・月次サマリ — work-log</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.30.0/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="_shared.css">
+  <style>
+    .period-tabs { display: flex; gap: 4px; background: var(--surface); padding: 4px; border-radius: var(--radius); border: 1px solid var(--border); width: fit-content; }
+    .period-tabs .tab { padding: 8px 16px; border-radius: 5px; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; }
+    .period-tabs .tab.active { background: var(--primary-light); color: var(--primary); }
+
+    .stat-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-strip .stat-card {
+      background: var(--surface); border-radius: var(--radius); padding: 18px;
+      border: 1px solid var(--border);
+    }
+    .stat-strip .lab { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+    .stat-strip .val { font-size: 24px; font-weight: 700; margin-top: 4px; }
+    .stat-strip .delta { font-size: 11px; font-weight: 600; }
+
+    .kpt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .kpt-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 0;
+      overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .kpt-head {
+      padding: 18px 22px; color: #fff;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .kpt-head .k-icon {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: rgba(255,255,255,0.22);
+      display: grid; place-items: center; font-size: 20px;
+    }
+    .kpt-head h3 { margin: 0; font-size: 16px; font-weight: 700; }
+    .kpt-head .desc { font-size: 12px; opacity: 0.85; }
+    .kpt-card.keep .kpt-head { background: linear-gradient(135deg, #13DEB9, #00B388); }
+    .kpt-card.problem .kpt-head { background: linear-gradient(135deg, #FA896B, #E5664A); }
+    .kpt-card.try .kpt-head { background: linear-gradient(135deg, #FFAE1F, #F09000); }
+
+    .kpt-body { padding: 18px 22px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+    .kpt-item {
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      background: var(--bg);
+      font-size: 13px; line-height: 1.6;
+      position: relative;
+    }
+    .kpt-item .src {
+      margin-top: 8px; font-size: 11px; color: var(--text-muted); display: flex; gap: 6px; flex-wrap: wrap;
+    }
+    .kpt-item .pin {
+      position: absolute; top: 10px; right: 12px;
+      font-size: 11px; color: var(--text-light); cursor: pointer;
+    }
+    .kpt-item .pin.active { color: var(--warning); }
+
+    .chart-block {
+      background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 22px; margin-top: 24px;
+    }
+    .barchart { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; align-items: end; height: 180px; padding: 16px 0; }
+    .barchart .col { display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+    .barchart .bar {
+      width: 100%; max-width: 40px; border-radius: 6px 6px 0 0;
+      background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+    }
+    .barchart .lab { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+    .barchart .val { font-size: 12px; font-weight: 700; color: var(--text); }
+    @media (max-width: 1100px) {
+      .kpt-grid { grid-template-columns: 1fr; }
+      .stat-strip { grid-template-columns: repeat(2, 1fr); }
+      .barchart { grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <a class="logo" href="#"><div class="logo-mark"><i class="ti ti-notebook"></i></div><span>work-log</span></a>
+      <div class="nav-section">Home</div>
+      <a class="nav-item" href="s-02-dashboard.html"><i class="ti ti-layout-dashboard i"></i> ダッシュボード</a>
+      <div class="nav-section">プロジェクト</div>
+      <a class="nav-item" href="s-03-projects.html"><i class="ti ti-folder i"></i> プロジェクト一覧</a>
+      <a class="nav-item" href="s-04-task-board.html"><i class="ti ti-list-check i"></i> タスクボード <span class="badge">12</span></a>
+      <div class="nav-section">日報</div>
+      <a class="nav-item" href="s-06-chat.html"><i class="ti ti-sparkles i"></i> AI壁打ち</a>
+      <a class="nav-item" href="s-07-diary-list.html"><i class="ti ti-book-2 i"></i> 日報一覧</a>
+      <a class="nav-item active" href="s-09-summary.html"><i class="ti ti-chart-bar i"></i> 週次・月次サマリ</a>
+      <div class="nav-section">その他</div>
+      <a class="nav-item" href="s-10-settings.html"><i class="ti ti-settings i"></i> 設定</a>
+    </aside>
+
+    <div class="main">
+      <header class="header">
+        <button class="hamburger" onclick="toggleSidebar()" aria-label="メニュー"><i class="ti ti-menu-2"></i></button>
+        <div class="search"><i class="ti ti-search"></i><input type="text" placeholder="検索..." /></div>
+        <div class="actions">
+          <button class="icon-btn" data-action="info" data-message="テーマを切り替えます (プロトタイプでは未連動)"><i class="ti ti-sun"></i></button>
+          <button class="icon-btn" data-action="info" data-message="通知 3 件 (プロトタイプ表示)"><i class="ti ti-bell"></i></button>
+          <div class="avatar" data-action="info" data-message="ユーザメニュー (プロトタイプ未実装)" style="cursor:pointer;" title="ユーザメニュー">TN</div>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="page-title">
+          <div>
+            <h1>振り返りサマリ (KPT)</h1>
+            <div class="breadcrumb">日次 YWT を AI が KPT に変換 · 2026/5/20 〜 5/26 の週次</div>
+          </div>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <div class="period-tabs">
+              <div class="tab">日次</div>
+              <div class="tab active">週次</div>
+              <div class="tab">月次</div>
+            </div>
+            <button class="btn ghost" data-action="info" data-message="この機能はプロトタイプでは未実装です"><i class="ti ti-calendar"></i> 2026年 第22週</button>
+            <button class="btn primary" data-action="info" data-message="この操作を実行します (プロトタイプ)"><i class="ti ti-refresh"></i> AI で再生成</button>
+          </div>
+        </div>
+
+        <div class="stat-strip">
+          <div class="stat-card">
+            <div class="lab">この週の日報</div>
+            <div class="val">6 / 7日</div>
+            <div class="delta" style="color:var(--success-dark);">▲ 先週 +1</div>
+          </div>
+          <div class="stat-card">
+            <div class="lab">完了タスク</div>
+            <div class="val">23件</div>
+            <div class="delta" style="color:var(--success-dark);">▲ +6</div>
+          </div>
+          <div class="stat-card">
+            <div class="lab">AI 壁打ち回数</div>
+            <div class="val">6回</div>
+            <div class="delta" style="color:var(--text-muted);">— 先週同</div>
+          </div>
+          <div class="stat-card">
+            <div class="lab">関わったPJ</div>
+            <div class="val">4プロジェクト</div>
+            <div class="delta" style="color:var(--success-dark);">▲ +1</div>
+          </div>
+        </div>
+
+        <div class="kpt-grid">
+          <div class="kpt-card keep">
+            <div class="kpt-head">
+              <div class="k-icon"><i class="ti ti-thumb-up"></i></div>
+              <div>
+                <h3>Keep (続けたいこと)</h3>
+                <div class="desc">うまくいった習慣・継続したい行動</div>
+              </div>
+            </div>
+            <div class="kpt-body">
+              <div class="kpt-item">
+                <i class="ti ti-pin pin active"></i>
+                YWT を毎日書く習慣が定着し始めた。日次の記録なら 5 分で完了している。
+                <div class="src"><span class="chip muted"><i class="ti ti-calendar"></i> 5/22, 5/23, 5/26 由来</span></div>
+              </div>
+              <div class="kpt-item">
+                <i class="ti ti-pin pin"></i>
+                タスクのコメントに「気づき」を 1 行残す癖がついた。日報素材として有効。
+                <div class="src"><span class="chip muted">5/21, 5/23, 5/26 由来</span></div>
+              </div>
+              <div class="kpt-item">
+                <i class="ti ti-pin pin"></i>
+                技術判断を「なぜそうしたか」までセットで記録すると、週次レビュー時の理解が早い。
+                <div class="src"><span class="chip muted">5/23, 5/26 由来</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpt-card problem">
+            <div class="kpt-head">
+              <div class="k-icon"><i class="ti ti-alert-triangle"></i></div>
+              <div>
+                <h3>Problem (課題)</h3>
+                <div class="desc">うまくいかなかったこと・摩擦</div>
+              </div>
+            </div>
+            <div class="kpt-body">
+              <div class="kpt-item">
+                <i class="ti ti-pin pin active"></i>
+                Gemini API のレート/コスト調査タスクが 2 度期限超過。優先度の見積りが甘い傾向。
+                <div class="src"><span class="chip muted">5/24, 5/27 由来</span></div>
+              </div>
+              <div class="kpt-item">
+                <i class="ti ti-pin pin"></i>
+                UI テンプレ比較レポートのドラフトが「もう少しで終わる」のまま 3 日経過した。
+                <div class="src"><span class="chip muted">5/20, 5/22 由来</span></div>
+              </div>
+              <div class="kpt-item">
+                <i class="ti ti-pin pin"></i>
+                打ち合わせ直後のコメント記録が抜けがち。記憶を頼りに後で書こうとすると粒度が落ちる。
+                <div class="src"><span class="chip muted">5/21, 5/25 由来</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="kpt-card try">
+            <div class="kpt-head">
+              <div class="k-icon"><i class="ti ti-rocket"></i></div>
+              <div>
+                <h3>Try (次に試すこと)</h3>
+                <div class="desc">来週試してみたい改善アクション</div>
+              </div>
+            </div>
+            <div class="kpt-body">
+              <div class="kpt-item">
+                <i class="ti ti-pin pin active"></i>
+                調査系タスクは「最大 90 分」で一度区切る。続けるかどうかを区切りで判断する。
+                <div class="src"><span class="chip muted">Problem #1 から派生</span></div>
+              </div>
+              <div class="kpt-item">
+                <i class="ti ti-pin pin"></i>
+                打ち合わせ直後の 5 分を「コメント記録タイム」としてカレンダーに固定する。
+                <div class="src"><span class="chip muted">Problem #3 から派生</span></div>
+              </div>
+              <div class="kpt-item">
+                <i class="ti ti-pin pin"></i>
+                UI テンプレ比較は「公開可能な不完全さ」で社内共有してフィードバックを得る。
+                <div class="src"><span class="chip muted">Problem #2 から派生</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-block">
+          <div class="section-head">
+            <h3>📈 この週の活動量(タスク完了数)</h3>
+            <div style="display:flex; gap:14px; font-size:12px; color:var(--text-muted);">
+              <span><span style="display:inline-block;width:10px;height:10px;background:var(--primary);border-radius:2px;"></span> タスク完了</span>
+              <span><span style="display:inline-block;width:10px;height:10px;background:var(--success);border-radius:2px;"></span> コメント数</span>
+            </div>
+          </div>
+          <div class="barchart">
+            <div class="col"><div class="val">2</div><div class="bar" style="height:22%"></div><div class="lab">月 5/20</div></div>
+            <div class="col"><div class="val">3</div><div class="bar" style="height:33%"></div><div class="lab">火 5/21</div></div>
+            <div class="col"><div class="val">4</div><div class="bar" style="height:44%"></div><div class="lab">水 5/22</div></div>
+            <div class="col"><div class="val">2</div><div class="bar" style="height:22%; background: linear-gradient(180deg, var(--text-light), var(--text-muted));"></div><div class="lab">木 5/23</div></div>
+            <div class="col"><div class="val">1</div><div class="bar" style="height:11%; background: linear-gradient(180deg, var(--text-light), var(--text-muted));"></div><div class="lab">金 5/24</div></div>
+            <div class="col"><div class="val">6</div><div class="bar" style="height:66%"></div><div class="lab">月 5/26</div></div>
+            <div class="col"><div class="val">5</div><div class="bar" style="height:55%"></div><div class="lab">火 5/27</div></div>
+          </div>
+          <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--border); font-size:13px; color:var(--text);">
+            <i class="ti ti-bulb" style="color:var(--warning);"></i> <b>AI 分析</b>: 木・金にペースダウン傾向あり。前週も同パターン。週後半に「集中タスク 1 件」を意識的に置くと、ばらつきが減るかもしれません。
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  <div id="drawerOverlay" class="drawer-overlay" onclick="toggleSidebar()"></div>
+  <div id="toastContainer" class="toast-container"></div>
+  <script src="_data/seed.js"></script>
+  <script src="_data/projects.js"></script>
+  <script src="_data/tasks.js"></script>
+  <script src="_data/diary-entries.js"></script>
+  <script src="_data/chat-messages.js"></script>
+  <script src="_data/comments.js"></script>
+  <script src="_shared.js"></script>
+</body>
+</html>

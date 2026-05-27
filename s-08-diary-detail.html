@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>S-08 日報詳細・編集 — work-log</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.30.0/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="_shared.css">
+  <style>
+    .detail-grid { display: grid; grid-template-columns: 2.2fr 1fr; gap: 24px; }
+    .ywt-block { padding: 24px; }
+    .ywt-block + .ywt-block { margin-top: 18px; }
+    .ywt-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 14px;
+    }
+    .ywt-header .pill {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: grid; place-items: center;
+      font-size: 14px; font-weight: 800; color: #fff;
+    }
+    .ywt-header h3 { margin: 0; font-size: 16px; font-weight: 700; }
+    .ywt-header .sub { color: var(--text-muted); font-size: 12px; margin-left: 4px; }
+    .ywt-block.y .pill { background: var(--primary); }
+    .ywt-block.w .pill { background: var(--success); }
+    .ywt-block.t .pill { background: var(--warning); }
+    .ywt-content {
+      font-size: 15px; line-height: 1.85;
+      color: var(--text);
+    }
+    .ywt-content ul { padding-left: 22px; margin: 0; }
+    .ywt-content li { margin-bottom: 6px; }
+    .ywt-toolbar {
+      display: flex; gap: 4px; padding-bottom: 10px; margin-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .ywt-toolbar button {
+      width: 30px; height: 30px; border-radius: 6px; background: transparent;
+      border: 0; cursor: pointer; color: var(--text-muted); font-size: 16px;
+    }
+    .ywt-toolbar button:hover { background: var(--bg); color: var(--text); }
+
+    .meta-row {
+      display: grid; grid-template-columns: 100px 1fr;
+      gap: 8px 16px; align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .meta-row:last-child { border-bottom: 0; }
+    .meta-row .key { color: var(--text-muted); font-weight: 600; }
+
+    .source-list { display: flex; flex-direction: column; gap: 10px; }
+    .source-item {
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      background: var(--bg);
+      font-size: 13px;
+    }
+    .source-item .head {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 4px;
+      color: var(--text-muted); font-size: 12px;
+    }
+    .source-item .head .arrow {
+      font-weight: 700; color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <a class="logo" href="#"><div class="logo-mark"><i class="ti ti-notebook"></i></div><span>work-log</span></a>
+      <div class="nav-section">Home</div>
+      <a class="nav-item" href="s-02-dashboard.html"><i class="ti ti-layout-dashboard i"></i> ダッシュボード</a>
+      <div class="nav-section">プロジェクト</div>
+      <a class="nav-item" href="s-03-projects.html"><i class="ti ti-folder i"></i> プロジェクト一覧</a>
+      <a class="nav-item" href="s-04-task-board.html"><i class="ti ti-list-check i"></i> タスクボード <span class="badge">12</span></a>
+      <div class="nav-section">日報</div>
+      <a class="nav-item" href="s-06-chat.html"><i class="ti ti-sparkles i"></i> AI壁打ち</a>
+      <a class="nav-item active" href="s-07-diary-list.html"><i class="ti ti-book-2 i"></i> 日報一覧</a>
+      <a class="nav-item" href="s-09-summary.html"><i class="ti ti-chart-bar i"></i> 週次・月次サマリ</a>
+      <div class="nav-section">その他</div>
+      <a class="nav-item" href="s-10-settings.html"><i class="ti ti-settings i"></i> 設定</a>
+    </aside>
+
+    <div class="main">
+      <header class="header">
+        <button class="hamburger" onclick="toggleSidebar()" aria-label="メニュー"><i class="ti ti-menu-2"></i></button>
+        <div class="search"><i class="ti ti-search"></i><input type="text" placeholder="検索..." /></div>
+        <div class="actions">
+          <button class="icon-btn" data-action="info" data-message="テーマを切り替えます (プロトタイプでは未連動)"><i class="ti ti-sun"></i></button>
+          <button class="icon-btn" data-action="info" data-message="通知 3 件 (プロトタイプ表示)"><i class="ti ti-bell"></i></button>
+          <div class="avatar" data-action="info" data-message="ユーザメニュー (プロトタイプ未実装)" style="cursor:pointer;" title="ユーザメニュー">TN</div>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="page-title">
+          <div>
+            <div class="breadcrumb"><a href="s-07-diary-list.html" style="color:var(--primary); text-decoration:none;">日報一覧</a> / 2026/5/26 (火)</div>
+            <h1 style="margin-top:4px;">2026年5月26日 (火) の日報</h1>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <span class="chip success"><i class="ti ti-check"></i> Published</span>
+            <button class="btn ghost" data-action="info" data-message="この機能はプロトタイプでは未実装です"><i class="ti ti-arrow-left"></i> 前日</button>
+            <button class="btn ghost" data-action="info" data-message="この機能はプロトタイプでは未実装です">翌日 <i class="ti ti-arrow-right"></i></button>
+            <button class="btn ghost" data-action="info" data-message="この機能はプロトタイプでは未実装です"><i class="ti ti-share-2"></i></button>
+            <button class="btn ghost" data-action="info" data-message="この機能はプロトタイプでは未実装です"><i class="ti ti-trash"></i></button>
+            <button class="btn primary" data-action="info" data-message="この操作を実行します (プロトタイプ)"><i class="ti ti-edit"></i> 編集モード</button>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <div>
+            <div class="card ywt-block y">
+              <div class="ywt-header">
+                <span class="pill">Y</span>
+                <h3>やったこと</h3>
+                <span class="sub">(Yatta)</span>
+              </div>
+              <div class="ywt-toolbar">
+                <button title="太字" data-action="not-implemented"><i class="ti ti-bold"></i></button>
+                <button title="リスト" data-action="not-implemented"><i class="ti ti-list"></i></button>
+                <button title="リンク" data-action="not-implemented"><i class="ti ti-link"></i></button>
+                <button title="コード" data-action="not-implemented"><i class="ti ti-code"></i></button>
+                <div style="margin-left:auto; font-size:12px; color:var(--text-muted); align-self:center;">読み取り専用 · 編集モードで変更可</div>
+              </div>
+              <div class="ywt-content">
+                <ul>
+                  <li>要件ヒアリング(全 10 カテゴリ)を完了。AskUserQuestion を活用して効率化できた。</li>
+                  <li>エンティティ 8 種(User / Project / Task / TaskComment / TaskHistory / ChatSession / ChatMessage / DiaryEntry)を確定し、ER 図を Mermaid 化。</li>
+                  <li>SI 形式の要件定義書ドラフト v0.1 を生成。13 章すべて初稿が揃った。</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="card ywt-block w">
+              <div class="ywt-header">
+                <span class="pill">W</span>
+                <h3>わかったこと</h3>
+                <span class="sub">(Wakatta)</span>
+              </div>
+              <div class="ywt-toolbar">
+                <button data-action="not-implemented"><i class="ti ti-bold"></i></button>
+                <button data-action="not-implemented"><i class="ti ti-list"></i></button>
+                <button data-action="not-implemented"><i class="ti ti-link"></i></button>
+                <button data-action="not-implemented"><i class="ti ti-code"></i></button>
+              </div>
+              <div class="ywt-content">
+                <ul>
+                  <li>YWT × KPT のハイブリッド構成(日次=YWT、週次サマリ=KPT)は、個人運用に最も自然。日次のハードルを最小化しつつ、振り返りの抽象度を週単位で上げられる。</li>
+                  <li>Supabase の RLS は、テーブル単位の policy 名と <code>auth.uid()</code> の比較を徹底すれば漏れにくい。policy 名を <code>機能名_select/insert/update</code> で揃えると保守性が上がる。</li>
+                  <li>ChatSession と DiaryEntry を <b>1:0..1</b> にした判断は正解。「壁打ちだけで終わる日」が現実にあるため、強い 1:1 制約はかえって運用を縛る。</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="card ywt-block t">
+              <div class="ywt-header">
+                <span class="pill">T</span>
+                <h3>つぎやること</h3>
+                <span class="sub">(Tsugi-yaru)</span>
+              </div>
+              <div class="ywt-toolbar">
+                <button data-action="not-implemented"><i class="ti ti-bold"></i></button>
+                <button data-action="not-implemented"><i class="ti ti-list"></i></button>
+                <button data-action="not-implemented"><i class="ti ti-link"></i></button>
+                <button data-action="not-implemented"><i class="ti ti-code"></i></button>
+              </div>
+              <div class="ywt-content">
+                <ul>
+                  <li>ドラフト v0.1 を社内レビュー依頼(明日中)。</li>
+                  <li>S-02 ダッシュボードを起点に主要モックアップを着手。</li>
+                  <li>Gemini API のレート/コストガイドを別タスクとして切り出す。</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card">
+              <h3 style="margin:0 0 4px; font-size:15px; font-weight:700;">📋 詳細</h3>
+              <div class="meta-row"><span class="key">日付</span><span>2026/5/26 (火)</span></div>
+              <div class="meta-row"><span class="key">ステータス</span><span><span class="chip success">Published</span></span></div>
+              <div class="meta-row"><span class="key">作成日時</span><span>2026/5/26 18:42</span></div>
+              <div class="meta-row"><span class="key">最終更新</span><span>2026/5/26 19:10</span></div>
+              <div class="meta-row"><span class="key">ソース</span><span><a href="s-06-chat.html" style="color:var(--primary); text-decoration:none;">壁打ちセッション#42 →</a></span></div>
+              <div class="meta-row"><span class="key">タグ</span><span style="display:flex;gap:4px;flex-wrap:wrap;"><span class="chip muted">要件定義</span><span class="chip muted">DB設計</span><span class="chip muted">work-log MVP</span></span></div>
+            </div>
+
+            <div class="card" style="margin-top:24px;">
+              <div class="section-head"><h3>📎 参照タスク</h3><span class="chip muted">5件</span></div>
+              <div class="source-list">
+                <div class="source-item">
+                  <div class="head"><span class="chip muted">work-log MVP</span> <span class="arrow">Todo → Done</span></div>
+                  <div>ER 図を Mermaid 化して要件書に貼る</div>
+                </div>
+                <div class="source-item">
+                  <div class="head"><span class="chip muted">work-log MVP</span> <span class="arrow">Todo → Done</span></div>
+                  <div>Supabase RLS ポリシー方針を整理</div>
+                </div>
+                <div class="source-item">
+                  <div class="head"><span class="chip muted">work-log MVP</span> <span class="arrow">Comment</span></div>
+                  <div>「DiaryEntry の UNIQUE 制約は <code>(user_id, date)</code> で OK」</div>
+                </div>
+                <div class="source-item">
+                  <div class="head"><span class="chip muted">work-log MVP</span> <span class="arrow">Done</span></div>
+                  <div>8エンティティの確定とドキュメント化</div>
+                </div>
+                <div class="source-item">
+                  <div class="head"><span class="chip muted">UI 検証</span> <span class="arrow">Doing</span></div>
+                  <div>Modernize テンプレのレイアウト調査(継続中)</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top:24px; background: var(--primary-light); border: 1px solid #C9D6FF; box-shadow: none;">
+              <div style="display:flex; gap:10px; align-items:flex-start;">
+                <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#13DEB9,#00B388);color:#fff;display:grid;place-items:center;font-size:18px;flex-shrink:0;"><i class="ti ti-sparkles"></i></div>
+                <div>
+                  <div style="font-weight:700; margin-bottom:4px;">AI からひとこと</div>
+                  <div style="font-size:13px; line-height:1.6; color:var(--text);">「ハイブリッド YWT × KPT」の気づきは強い学びです。週次サマリでこの判断を再評価できるように、5/30(土)に KPT サマリの確認をリマインドします。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  <div id="drawerOverlay" class="drawer-overlay" onclick="toggleSidebar()"></div>
+  <div id="toastContainer" class="toast-container"></div>
+  <script src="_data/seed.js"></script>
+  <script src="_data/projects.js"></script>
+  <script src="_data/tasks.js"></script>
+  <script src="_data/diary-entries.js"></script>
+  <script src="_data/chat-messages.js"></script>
+  <script src="_data/comments.js"></script>
+  <script src="_shared.js"></script>
+</body>
+</html>

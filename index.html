@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>work-log — モックアップ画面一覧</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.30.0/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="_shared.css">
+  <style>
+    body { background: var(--bg); min-height: 100vh; }
+    .launcher {
+      max-width: 1100px; margin: 0 auto; padding: 48px 24px;
+    }
+    .launcher header { margin-bottom: 32px; }
+    .launcher header .product {
+      display: flex; align-items: center; gap: 14px;
+      font-weight: 800; font-size: 24px;
+    }
+    .launcher header .logo-mark {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #fff; display: grid; place-items: center; font-size: 22px;
+    }
+    .launcher header h1 { margin: 16px 0 8px; font-size: 28px; font-weight: 700; }
+    .launcher header p { color: var(--text-muted); margin: 0; max-width: 720px; line-height: 1.7; }
+    .launcher .meta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+
+    .screens {
+      display: grid; gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      margin-top: 32px;
+    }
+    .screen-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      text-decoration: none; color: inherit;
+      display: flex; flex-direction: column; gap: 8px;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    }
+    .screen-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+      border-color: var(--primary);
+    }
+    .screen-card .num {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+      color: var(--primary); text-transform: uppercase;
+    }
+    .screen-card .title {
+      font-size: 16px; font-weight: 700; margin: 0;
+    }
+    .screen-card .desc {
+      font-size: 13px; color: var(--text-muted); line-height: 1.5;
+    }
+    .screen-card .icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--primary-light); color: var(--primary);
+      display: grid; place-items: center; font-size: 22px;
+      margin-bottom: 4px;
+    }
+
+    .device-tip {
+      margin-top: 32px; padding: 16px 20px;
+      background: var(--primary-light); color: var(--primary);
+      border-radius: var(--radius); font-size: 13px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .footer-note {
+      margin-top: 48px; padding-top: 24px;
+      border-top: 1px solid var(--border);
+      color: var(--text-light); font-size: 12px; text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="launcher">
+    <header>
+      <div class="product">
+        <div class="logo-mark"><i class="ti ti-notebook"></i></div>
+        <span>work-log</span>
+      </div>
+      <h1>UI モックアップ一覧</h1>
+      <p>個人向け業務ログ + AI 壁打ち日報システムのプロトタイプ画面集。<br/>
+      レスポンシブ対応、画面遷移・Toast・Modal 等のインタラクションを実装した、クリック可能なデモです。</p>
+      <div class="meta">
+        <span class="chip primary"><i class="ti ti-template"></i> Modernize (Next.js + MUI 風)</span>
+        <span class="chip success"><i class="ti ti-device-laptop"></i> Responsive</span>
+        <span class="chip muted"><i class="ti ti-calendar"></i> 2026-05-27</span>
+      </div>
+    </header>
+
+    <div class="device-tip">
+      <i class="ti ti-info-circle"></i>
+      Chrome DevTools (⌘+⇧+M) で 1280x800 / 768x1024 / 375x667 を切り替えるとレスポンシブ挙動を確認できます。
+    </div>
+
+    <div class="screens">
+      <a class="screen-card" href="s-01-login.html">
+        <div class="icon"><i class="ti ti-lock"></i></div>
+        <div class="num">S-01</div>
+        <div class="title">ログイン</div>
+        <div class="desc">Google OAuth (Supabase Auth) でサインイン</div>
+      </a>
+      <a class="screen-card" href="s-02-dashboard.html">
+        <div class="icon"><i class="ti ti-layout-dashboard"></i></div>
+        <div class="num">S-02</div>
+        <div class="title">ダッシュボード</div>
+        <div class="desc">今日のタスク・「日報作る」CTA・直近の日報</div>
+      </a>
+      <a class="screen-card" href="s-03-projects.html">
+        <div class="icon"><i class="ti ti-folder"></i></div>
+        <div class="num">S-03</div>
+        <div class="title">プロジェクト一覧</div>
+        <div class="desc">PJ の作成・編集・アーカイブ管理</div>
+      </a>
+      <a class="screen-card" href="s-04-task-board.html">
+        <div class="icon"><i class="ti ti-list-check"></i></div>
+        <div class="num">S-04</div>
+        <div class="title">タスクボード</div>
+        <div class="desc">Todo / Doing / Done のカンバン形式</div>
+      </a>
+      <a class="screen-card" href="s-05-task-detail.html">
+        <div class="icon"><i class="ti ti-clipboard-text"></i></div>
+        <div class="num">S-05</div>
+        <div class="title">タスク詳細</div>
+        <div class="desc">コメント・履歴・ステータス変更</div>
+      </a>
+      <a class="screen-card" href="s-06-chat.html">
+        <div class="icon"><i class="ti ti-sparkles"></i></div>
+        <div class="num">S-06</div>
+        <div class="title">AI 壁打ちチャット</div>
+        <div class="desc">YWT 対話で日報を仕上げる</div>
+      </a>
+      <a class="screen-card" href="s-07-diary-list.html">
+        <div class="icon"><i class="ti ti-book-2"></i></div>
+        <div class="num">S-07</div>
+        <div class="title">日報一覧・検索</div>
+        <div class="desc">日付・キーワード・タグで絞り込み</div>
+      </a>
+      <a class="screen-card" href="s-08-diary-detail.html">
+        <div class="icon"><i class="ti ti-file-text"></i></div>
+        <div class="num">S-08</div>
+        <div class="title">日報詳細・編集</div>
+        <div class="desc">YWT 形式での編集・公開状態切替</div>
+      </a>
+      <a class="screen-card" href="s-09-summary.html">
+        <div class="icon"><i class="ti ti-chart-bar"></i></div>
+        <div class="num">S-09</div>
+        <div class="title">週次・月次サマリ</div>
+        <div class="desc">期間指定で AI が KPT を生成</div>
+      </a>
+      <a class="screen-card" href="s-10-settings.html">
+        <div class="icon"><i class="ti ti-settings"></i></div>
+        <div class="num">S-10</div>
+        <div class="title">設定</div>
+        <div class="desc">テーマ / アカウント / ログアウト</div>
+      </a>
+    </div>
+
+    <div class="footer-note">
+      Generated by <a href="https://github.com/ccward442/harness-driven-moc" style="color:var(--primary);">spec-driven-harness</a> · モックアップは Claude Code と人間の協働で生成
+    </div>
+  </div>
+</body>
+</html>

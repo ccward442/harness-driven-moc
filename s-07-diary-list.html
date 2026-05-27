@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>S-07 日報一覧 — work-log</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.30.0/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="_shared.css">
+  <style>
+    .filter-bar {
+      background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border);
+      padding: 14px 18px;
+      display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .filter-bar .filter-search {
+      flex: 1; min-width: 260px;
+      background: var(--bg); border-radius: var(--radius); padding: 8px 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .filter-bar .filter-search input { flex: 1; border: 0; outline: none; background: transparent; font: inherit; }
+
+    .diary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+    .diary-card { padding: 22px; cursor: pointer; display: flex; flex-direction: column; gap: 14px; }
+    .diary-card:hover { box-shadow: var(--shadow-lg); }
+    .diary-card .day-row {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .diary-card .date-blk {
+      display: flex; align-items: baseline; gap: 8px;
+    }
+    .diary-card .date-blk .day { font-size: 20px; font-weight: 700; }
+    .diary-card .date-blk .dow { font-size: 13px; color: var(--text-muted); font-weight: 600; }
+    .ywt-mini { display: flex; flex-direction: column; gap: 10px; }
+    .ywt-mini .row { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.5; }
+    .ywt-mini .pill {
+      width: 22px; height: 22px; border-radius: 50%;
+      display: grid; place-items: center; flex-shrink: 0;
+      font-size: 11px; font-weight: 800; color: #fff;
+    }
+    .ywt-mini .y .pill { background: var(--primary); }
+    .ywt-mini .w .pill { background: var(--success); }
+    .ywt-mini .t .pill { background: var(--warning); }
+    .ywt-mini .txt { color: var(--text); }
+    .ywt-mini .txt mark { background: #FFF3BF; padding: 0 2px; border-radius: 3px; }
+    .diary-card .tags { display: flex; gap: 6px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--border); }
+    .pagination {
+      display: flex; justify-content: center; gap: 6px; margin-top: 28px;
+    }
+    .pagination .pg { width: 36px; height: 36px; border-radius: var(--radius); display: grid; place-items: center; font-weight: 600; font-size: 13px; color: var(--text-muted); cursor: pointer; background: var(--surface); border: 1px solid var(--border); }
+    .pagination .pg.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .pagination .pg:hover:not(.active) { color: var(--primary); border-color: var(--primary); }
+    @media (max-width: 1100px) { .diary-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <a class="logo" href="#"><div class="logo-mark"><i class="ti ti-notebook"></i></div><span>work-log</span></a>
+      <div class="nav-section">Home</div>
+      <a class="nav-item" href="s-02-dashboard.html"><i class="ti ti-layout-dashboard i"></i> ダッシュボード</a>
+      <div class="nav-section">プロジェクト</div>
+      <a class="nav-item" href="s-03-projects.html"><i class="ti ti-folder i"></i> プロジェクト一覧</a>
+      <a class="nav-item" href="s-04-task-board.html"><i class="ti ti-list-check i"></i> タスクボード <span class="badge">12</span></a>
+      <div class="nav-section">日報</div>
+      <a class="nav-item" href="s-06-chat.html"><i class="ti ti-sparkles i"></i> AI壁打ち</a>
+      <a class="nav-item active" href="s-07-diary-list.html"><i class="ti ti-book-2 i"></i> 日報一覧</a>
+      <a class="nav-item" href="s-09-summary.html"><i class="ti ti-chart-bar i"></i> 週次・月次サマリ</a>
+      <div class="nav-section">その他</div>
+      <a class="nav-item" href="s-10-settings.html"><i class="ti ti-settings i"></i> 設定</a>
+    </aside>
+
+    <div class="main">
+      <header class="header">
+        <button class="hamburger" onclick="toggleSidebar()" aria-label="メニュー"><i class="ti ti-menu-2"></i></button>
+        <div class="search"><i class="ti ti-search"></i><input type="text" placeholder="検索..." /></div>
+        <div class="actions">
+          <button class="icon-btn" data-action="info" data-message="テーマを切り替えます (プロトタイプでは未連動)"><i class="ti ti-sun"></i></button>
+          <button class="icon-btn" data-action="info" data-message="通知 3 件 (プロトタイプ表示)"><i class="ti ti-bell"></i></button>
+          <div class="avatar" data-action="info" data-message="ユーザメニュー (プロトタイプ未実装)" style="cursor:pointer;" title="ユーザメニュー">TN</div>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="page-title">
+          <div>
+            <h1>日報一覧</h1>
+            <div class="breadcrumb">Home / 日報 &nbsp;·&nbsp; 全 23 件 / 直近 30 日</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn ghost" data-action="info" data-message="この機能はプロトタイプでは未実装です"><i class="ti ti-download"></i> エクスポート</button>
+            <a href="s-06-chat.html" class="btn primary"><i class="ti ti-sparkles"></i> 今日の日報を作る</a>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <div class="filter-search">
+            <i class="ti ti-search"></i>
+            <input type="text" placeholder="やったこと・わかったこと・つぎやること から検索 (例: RLS)" value="RLS">
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <button class="btn ghost sm" data-action="info" data-message="この機能はプロトタイプでは未実装です"><i class="ti ti-calendar"></i> 期間: 直近30日</button>
+            <button class="btn ghost sm" data-action="info" data-message="この機能はプロトタイプでは未実装です"><i class="ti ti-tag"></i> タグ: すべて</button>
+            <button class="btn ghost sm" data-action="info" data-message="この機能はプロトタイプでは未実装です"><i class="ti ti-flag"></i> Status: All</button>
+          </div>
+        </div>
+
+        <!-- 検索 chips -->
+        <div style="display:flex; gap:6px; margin-bottom:18px; align-items:center;">
+          <span style="font-size:12px; color:var(--text-muted);">アクティブな絞り込み:</span>
+          <span class="chip primary">"RLS" <i class="ti ti-x" style="margin-left:2px; cursor:pointer;"></i></span>
+          <span class="chip muted">期間: 直近30日 <i class="ti ti-x"></i></span>
+          <button style="background:transparent; border:0; color:var(--primary); font-weight:600; font-size:12px; cursor:pointer;" data-action="not-implemented">すべてクリア</button>
+        </div>
+
+        <div class="diary-grid">
+          <div class="card diary-card">
+            <div class="day-row">
+              <div class="date-blk"><span class="day">5/26</span><span class="dow">(火)</span></div>
+              <span class="chip success">Published</span>
+            </div>
+            <div class="ywt-mini">
+              <div class="row y"><span class="pill">Y</span><span class="txt">要件ヒアリング完了。エンティティ 8 種を確定し、ER 図を Mermaid 化。</span></div>
+              <div class="row w"><span class="pill">W</span><span class="txt">YWT × KPT のハイブリッド構成は個人運用に最適。<mark>RLS</mark> はテーブル単位でなく user_id 強制にした方が漏れにくい。</span></div>
+              <div class="row t"><span class="pill">T</span><span class="txt">ドラフトをレビュー依頼、画面モック作成へ。</span></div>
+            </div>
+            <div class="tags">
+              <span class="chip muted">要件定義</span>
+              <span class="chip muted">DB設計</span>
+              <span class="chip muted">work-log MVP</span>
+            </div>
+          </div>
+
+          <div class="card diary-card">
+            <div class="day-row">
+              <div class="date-blk"><span class="day">5/23</span><span class="dow">(土)</span></div>
+              <span class="chip success">Published</span>
+            </div>
+            <div class="ywt-mini">
+              <div class="row y"><span class="pill">Y</span><span class="txt">Supabase Auth 検証(Google OAuth フロー疎通)。<mark>RLS</mark> ポリシー素案を作成。</span></div>
+              <div class="row w"><span class="pill">W</span><span class="txt">Supabase の <mark>RLS</mark> は <code>auth.uid()</code> を比較する書き方が安全。policy 名は機能名 + select/insert/update で揃えるとわかりやすい。</span></div>
+              <div class="row t"><span class="pill">T</span><span class="txt">本番投入前にポリシーのテストケース作成。</span></div>
+            </div>
+            <div class="tags">
+              <span class="chip muted">Supabase</span>
+              <span class="chip muted">Auth</span>
+              <span class="chip muted">セキュリティ</span>
+            </div>
+          </div>
+
+          <div class="card diary-card">
+            <div class="day-row">
+              <div class="date-blk"><span class="day">5/22</span><span class="dow">(金)</span></div>
+              <span class="chip warning">Draft</span>
+            </div>
+            <div class="ywt-mini">
+              <div class="row y"><span class="pill">Y</span><span class="txt">UI テンプレ 4 種比較。Modernize / Vuexy / Metronic の良し悪し評価。</span></div>
+              <div class="row w"><span class="pill">W</span><span class="txt">MUI ベース(Modernize)は本案件のチャット UI と相性良。Tailwind 系はカスタム重ね書きが楽だが、コンポーネント密度はやや低い。</span></div>
+              <div class="row t"><span class="pill">T</span><span class="txt">レポート下書きを月曜中に仕上げる。</span></div>
+            </div>
+            <div class="tags">
+              <span class="chip muted">UI</span>
+              <span class="chip muted">調査</span>
+            </div>
+          </div>
+
+          <div class="card diary-card">
+            <div class="day-row">
+              <div class="date-blk"><span class="day">5/21</span><span class="dow">(木)</span></div>
+              <span class="chip success">Published</span>
+            </div>
+            <div class="ywt-mini">
+              <div class="row y"><span class="pill">Y</span><span class="txt">Claude Code の hooks / subagent 機能の社内デモ準備。</span></div>
+              <div class="row w"><span class="pill">W</span><span class="txt">subagent は専門特化のプロンプト分離に有効。Slack の通知 hook は API レート制限に要注意。</span></div>
+              <div class="row t"><span class="pill">T</span><span class="txt">デモ後、フィードバックをスキル定義に反映。</span></div>
+            </div>
+            <div class="tags">
+              <span class="chip muted">Claude Code</span>
+              <span class="chip muted">デモ</span>
+            </div>
+          </div>
+
+          <div class="card diary-card">
+            <div class="day-row">
+              <div class="date-blk"><span class="day">5/20</span><span class="dow">(水)</span></div>
+              <span class="chip success">Published</span>
+            </div>
+            <div class="ywt-mini">
+              <div class="row y"><span class="pill">Y</span><span class="txt">spec-driven-harness の slash command 4 つを実装(init / interview / draft / mockup)。</span></div>
+              <div class="row w"><span class="pill">W</span><span class="txt">引数なしで起動された場合のフォールバックを丁寧にしておくと、対話が滑らかになる。AskUserQuestion は 4 問が上限。</span></div>
+              <div class="row t"><span class="pill">T</span><span class="txt">spec-review / spec-pdf の実装と動作確認。</span></div>
+            </div>
+            <div class="tags">
+              <span class="chip muted">社内ツール</span>
+              <span class="chip muted">spec-driven-harness</span>
+            </div>
+          </div>
+
+          <div class="card diary-card">
+            <div class="day-row">
+              <div class="date-blk"><span class="day">5/19</span><span class="dow">(火)</span></div>
+              <span class="chip success">Published</span>
+            </div>
+            <div class="ywt-mini">
+              <div class="row y"><span class="pill">Y</span><span class="txt">案件のスコープ整理。MoSCoW で初期化。</span></div>
+              <div class="row w"><span class="pill">W</span><span class="txt">「個人ナレッジ化」を主目的に据えると、機能の絞り込みが楽になる。</span></div>
+              <div class="row t"><span class="pill">T</span><span class="txt">ヒアリングを進める。</span></div>
+            </div>
+            <div class="tags">
+              <span class="chip muted">企画</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pagination">
+          <div class="pg"><i class="ti ti-chevron-left"></i></div>
+          <div class="pg active">1</div>
+          <div class="pg">2</div>
+          <div class="pg">3</div>
+          <div class="pg">4</div>
+          <div class="pg"><i class="ti ti-chevron-right"></i></div>
+        </div>
+      </main>
+    </div>
+  </div>
+  <div id="drawerOverlay" class="drawer-overlay" onclick="toggleSidebar()"></div>
+  <div id="toastContainer" class="toast-container"></div>
+  <script src="_data/seed.js"></script>
+  <script src="_data/projects.js"></script>
+  <script src="_data/tasks.js"></script>
+  <script src="_data/diary-entries.js"></script>
+  <script src="_data/chat-messages.js"></script>
+  <script src="_data/comments.js"></script>
+  <script src="_shared.js"></script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>S-05 タスク詳細 — work-log</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.30.0/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="_shared.css">
+  <style>
+    .detail-grid { display: grid; grid-template-columns: 2.2fr 1fr; gap: 24px; }
+    .desc-block { font-size: 14px; color: var(--text); line-height: 1.7; }
+    .desc-block p { margin: 0 0 12px; }
+    .status-select {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 12px; border-radius: var(--radius);
+      background: var(--warning-light); color: var(--warning);
+      font-weight: 700; cursor: pointer;
+    }
+    .status-select.todo { background: #ECEFF2; color: var(--text-muted); }
+    .status-select.done { background: var(--success-light); color: var(--success-dark); }
+    .meta-row {
+      display: grid; grid-template-columns: 100px 1fr;
+      gap: 8px 16px; align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .meta-row:last-child { border-bottom: 0; }
+    .meta-row .key { color: var(--text-muted); font-weight: 600; }
+    .comment-list { display: flex; flex-direction: column; gap: 18px; }
+    .comment {
+      display: flex; gap: 12px;
+    }
+    .comment .body { flex: 1; }
+    .comment .body .who { font-weight: 700; font-size: 13px; }
+    .comment .body .when { color: var(--text-muted); font-size: 12px; margin-left: 8px; }
+    .comment .body .msg {
+      margin-top: 6px;
+      background: var(--bg);
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .comment-input {
+      display: flex; gap: 12px; margin-top: 18px;
+    }
+    .comment-input .box {
+      flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 12px 14px;
+    }
+    .comment-input textarea { width: 100%; border: 0; outline: none; resize: none; font: inherit; min-height: 60px; color: var(--text); }
+    .comment-input .actions { display: flex; justify-content: space-between; align-items: center; padding-top: 6px; border-top: 1px solid var(--border); }
+    .timeline { display: flex; flex-direction: column; gap: 14px; position: relative; padding-left: 12px; }
+    .timeline::before {
+      content: ""; position: absolute; left: 6px; top: 8px; bottom: 8px;
+      width: 2px; background: var(--border);
+    }
+    .tl-item { display: flex; gap: 12px; position: relative; padding-left: 12px; }
+    .tl-item::before {
+      content: ""; position: absolute; left: -6px; top: 4px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--surface); border: 3px solid var(--primary);
+    }
+    .tl-item.done::before { border-color: var(--success); }
+    .tl-item.doing::before { border-color: var(--warning); }
+    .tl-item .what { font-size: 13px; font-weight: 600; }
+    .tl-item .when { font-size: 12px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <a class="logo" href="#"><div class="logo-mark"><i class="ti ti-notebook"></i></div><span>work-log</span></a>
+      <div class="nav-section">Home</div>
+      <a class="nav-item" href="s-02-dashboard.html"><i class="ti ti-layout-dashboard i"></i> ダッシュボード</a>
+      <div class="nav-section">プロジェクト</div>
+      <a class="nav-item" href="s-03-projects.html"><i class="ti ti-folder i"></i> プロジェクト一覧</a>
+      <a class="nav-item active" href="s-04-task-board.html"><i class="ti ti-list-check i"></i> タスクボード <span class="badge">12</span></a>
+      <div class="nav-section">日報</div>
+      <a class="nav-item" href="s-06-chat.html"><i class="ti ti-sparkles i"></i> AI壁打ち</a>
+      <a class="nav-item" href="s-07-diary-list.html"><i class="ti ti-book-2 i"></i> 日報一覧</a>
+      <a class="nav-item" href="s-09-summary.html"><i class="ti ti-chart-bar i"></i> 週次・月次サマリ</a>
+      <div class="nav-section">その他</div>
+      <a class="nav-item" href="s-10-settings.html"><i class="ti ti-settings i"></i> 設定</a>
+    </aside>
+
+    <div class="main">
+      <header class="header">
+        <button class="hamburger" onclick="toggleSidebar()" aria-label="メニュー"><i class="ti ti-menu-2"></i></button>
+        <div class="search"><i class="ti ti-search"></i><input type="text" placeholder="検索..." /></div>
+        <div class="actions">
+          <button class="icon-btn" data-action="info" data-message="テーマを切り替えます (プロトタイプでは未連動)"><i class="ti ti-sun"></i></button>
+          <button class="icon-btn" data-action="info" data-message="通知 3 件 (プロトタイプ表示)"><i class="ti ti-bell"></i></button>
+          <div class="avatar" data-action="info" data-message="ユーザメニュー (プロトタイプ未実装)" style="cursor:pointer;" title="ユーザメニュー">TN</div>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="page-title">
+          <div>
+            <div class="breadcrumb"><a href="s-03-projects.html" style="text-decoration:none;color:var(--primary)">プロジェクト</a> / <a href="s-04-task-board.html" style="text-decoration:none;color:var(--primary)">work-log MVP</a> / タスク</div>
+            <h1 style="margin-top:4px;">Modernize テンプレのレイアウト調査</h1>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn ghost" data-action="info" data-message="この機能はプロトタイプでは未実装です"><i class="ti ti-edit"></i> 編集</button>
+            <button class="btn ghost" data-action="info" data-message="この機能はプロトタイプでは未実装です"><i class="ti ti-share-2"></i> シェア</button>
+            <button class="icon-btn" data-action="not-implemented"><i class="ti ti-dots-vertical"></i></button>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <div>
+            <div class="card">
+              <div style="display:flex; gap:16px; align-items:center; margin-bottom:18px; flex-wrap:wrap;">
+                <div class="status-select"><span style="width:8px;height:8px;border-radius:50%;background:var(--warning);"></span> Doing <i class="ti ti-chevron-down"></i></div>
+                <span class="chip primary"><i class="ti ti-folder"></i> work-log MVP</span>
+                <span class="chip warning"><i class="ti ti-calendar"></i> 今日 18:00</span>
+                <span class="chip muted"><i class="ti ti-flag"></i> Must</span>
+              </div>
+
+              <h3 style="margin:0 0 12px; font-size:15px; font-weight:700;">説明</h3>
+              <div class="desc-block">
+                <p>サイドバー幅、ナビ項目の hover/active 色、カードの box-shadow / 角丸、フォント(Plus Jakarta Sans)などを Modernize 公式パッケージから引き出し、<code>_shared.css</code> に反映する。</p>
+                <p>狙い: モックアップ全 9 画面で MUI ベースのトンマナを統一し、提案時に「実装イメージと近い」と言える状態にすること。</p>
+                <p>完了条件:
+                  <ul>
+                    <li>カラートークン定義済(primary / success / warning / error / text / border / bg)</li>
+                    <li>サイドバー・ヘッダ・カードの基準スタイル定義済</li>
+                    <li>S-02 がリファクタ後の CSS で再描画できる</li>
+                  </ul>
+                </p>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top:24px;">
+              <div class="section-head"><h3>コメント (3)</h3></div>
+              <div class="comment-list">
+                <div class="comment">
+                  <div class="avatar sm">TN</div>
+                  <div class="body">
+                    <div><span class="who">Taro N.</span><span class="when">14:22</span></div>
+                    <div class="msg">主要トークンを <code>--primary: #5D87FF</code> 等で定義した。MUI のデフォと整合させたつもり。</div>
+                  </div>
+                </div>
+                <div class="comment">
+                  <div class="avatar sm">TN</div>
+                  <div class="body">
+                    <div><span class="who">Taro N.</span><span class="when">15:48</span></div>
+                    <div class="msg">サイドバー幅 270px / ナビ active = primary 塗りつぶし、で確定。Modernize 公式パッケージと一致。</div>
+                  </div>
+                </div>
+                <div class="comment">
+                  <div class="avatar sm" style="background:linear-gradient(135deg,#13DEB9,#00B388)">AI</div>
+                  <div class="body">
+                    <div><span class="who">AI アシスタント</span><span class="when">16:05</span></div>
+                    <div class="msg">「カードの box-shadow が薄すぎる」と感じませんか? Modernize は <code>rgba(90,114,123,0.11)</code> ぐらい載せています。<br/>確認用に S-02 を新値で再描画して比較するのが良さそうです。</div>
+                  </div>
+                </div>
+              </div>
+              <div class="comment-input">
+                <div class="avatar sm">TN</div>
+                <div class="box">
+                  <textarea placeholder="コメントを書く... (今日の気づき・つまずきポイントなど。日報の素材になります)"></textarea>
+                  <div class="actions">
+                    <div style="display:flex; gap:6px;">
+                      <button class="icon-btn" style="width:30px; height:30px;" data-action="not-implemented"><i class="ti ti-bold"></i></button>
+                      <button class="icon-btn" style="width:30px; height:30px;" data-action="not-implemented"><i class="ti ti-link"></i></button>
+                      <button class="icon-btn" style="width:30px; height:30px;" data-action="not-implemented"><i class="ti ti-paperclip"></i></button>
+                    </div>
+                    <button class="btn primary sm" data-action="info" data-message="この操作を実行します (プロトタイプ)"><i class="ti ti-send"></i> 送信</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card">
+              <h3 style="margin:0 0 4px; font-size:15px; font-weight:700;">詳細</h3>
+              <div class="meta-row"><span class="key">ID</span><span>TSK-024</span></div>
+              <div class="meta-row"><span class="key">担当</span><span style="display:flex;align-items:center;gap:6px;"><div class="avatar sm">TN</div> Taro N.</span></div>
+              <div class="meta-row"><span class="key">期限</span><span style="color:var(--warning);font-weight:600;">2026/5/27 18:00</span></div>
+              <div class="meta-row"><span class="key">優先度</span><span><span class="chip warning">High</span></span></div>
+              <div class="meta-row"><span class="key">タグ</span><span style="display:flex;gap:4px;flex-wrap:wrap;"><span class="chip muted">UI</span><span class="chip muted">CSS</span><span class="chip muted">調査</span></span></div>
+              <div class="meta-row"><span class="key">作成</span><span>2026/5/26 09:14</span></div>
+              <div class="meta-row"><span class="key">更新</span><span>2分前</span></div>
+            </div>
+
+            <div class="card" style="margin-top:24px;">
+              <div class="section-head"><h3>履歴</h3><span class="chip muted">5件</span></div>
+              <div class="timeline">
+                <div class="tl-item doing">
+                  <div>
+                    <div class="what">Todo → Doing</div>
+                    <div class="when">本日 09:30 · Taro N.</div>
+                  </div>
+                </div>
+                <div class="tl-item">
+                  <div>
+                    <div class="what">期限を 5/27 18:00 に変更</div>
+                    <div class="when">本日 09:32 · Taro N.</div>
+                  </div>
+                </div>
+                <div class="tl-item">
+                  <div>
+                    <div class="what">タグ「CSS」を追加</div>
+                    <div class="when">本日 10:05 · Taro N.</div>
+                  </div>
+                </div>
+                <div class="tl-item">
+                  <div>
+                    <div class="what">コメントを追加</div>
+                    <div class="when">本日 15:48 · Taro N.</div>
+                  </div>
+                </div>
+                <div class="tl-item">
+                  <div>
+                    <div class="what">タスクを作成</div>
+                    <div class="when">5/26 09:14 · Taro N.</div>
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top:18px; padding-top:14px; border-top:1px solid var(--border); font-size:12px; color:var(--text-muted);">
+                <i class="ti ti-info-circle"></i> ステータス変化とコメントは、日報生成時に AI が参照します。
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  <div id="drawerOverlay" class="drawer-overlay" onclick="toggleSidebar()"></div>
+  <div id="toastContainer" class="toast-container"></div>
+  <script src="_data/seed.js"></script>
+  <script src="_data/projects.js"></script>
+  <script src="_data/tasks.js"></script>
+  <script src="_data/diary-entries.js"></script>
+  <script src="_data/chat-messages.js"></script>
+  <script src="_data/comments.js"></script>
+  <script src="_shared.js"></script>
+</body>
+</html>
